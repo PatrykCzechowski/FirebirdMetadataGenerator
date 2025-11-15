@@ -87,6 +87,12 @@ public class MetadataExportService(
             {
                 Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
             }
+            var msg = ex.Message ?? string.Empty;
+            if (msg.Contains("invalid connection string", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Hint: Use Firebird ADO.NET keys: 'User ID', 'Password', 'Database', and either 'DataSource=localhost;Port=3050' or 'ServerType=1'.");
+                Console.WriteLine("Example: User ID=SYSDBA;Password=masterkey;Database=C:\\db\\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8");
+            }
             throw new DatabaseOperationException("Failed to export scripts.", ex);
         }
     }

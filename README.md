@@ -2,6 +2,30 @@
 
 Narzędzie konsolowe .NET 8.0 do zarządzania metadanymi bazy danych Firebird 5.0.
 
+## Opis i Użycie Aplikacji
+
+Jest to konsolowe narzędzie (.NET 8) do zarządzania metadanymi Firebird 5.0 (budowanie, eksport, aktualizacja).
+
+### Tworzenie bazy (Build DB)
+Tworzy plik `database.fdb` i wykonuje skrypty w kolejności: domeny → tabele → procedury.
+```powershell
+dotnet run -- build-db --db-dir "C:\db" --scripts-dir "C:\scripts"
+```
+
+### Eksport metadanych (Export Scripts)
+Zrzuca domeny, tabele i procedury do katalogów `domains/`, `tables/`, `procedures/`. Użyj kanonicznego connection string ADO.NET dla Firebird (User ID/Password/Database/DataSource/Port).
+```powershell
+dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\export"
+```
+
+### Aktualizacja bazy (Update DB)
+Wykonuje skrypty z podanego katalogu na istniejącej bazie.
+```powershell
+dotnet run -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\scripts"
+```
+
+Uwaga: Jeśli używasz embedded, zamiast `DataSource`/`Port` możesz zastosować `ServerType=1`, ale w tym projekcie zalecany jest tryb TCP/IP.
+
 ## 🎯 Funkcjonalności
 
 Aplikacja obsługuje trzy główne operacje:
@@ -90,18 +114,25 @@ DbMetaTool export-scripts --connection-string <conn-string> --output-dir <katalo
 ```
 
 **Przykład:**
-```bash
-dotnet run -- export-scripts --connection-string "database=C:\databases\mydb\database.fdb;user=SYSDBA;password=masterkey" --output-dir "C:\exported-scripts"
-```
+  **Przykład (TCP/IP):**
+  ```bash
+  dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\\exported-scripts"
+  ```
+
+  **Alternatywnie (embedded – niezalecane w tym projekcie):**
+  ```bash
+  dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;ServerType=1;Dialect=3;charset=UTF8" --output-dir "C:\\exported-scripts"
+  ```
 
 **Parametry:**
 - `--connection-string` - Connection string do istniejącej bazy Firebird
 - `--output-dir` - Katalog, do którego zostaną zapisane wygenerowane pliki
 
 **Format connection string:**
-```
-database=C:\ścieżka\do\bazy.fdb;user=SYSDBA;password=masterkey;charset=UTF8
-```
+  **Format connection string (TCP/IP):**
+  ```
+  User ID=SYSDBA;Password=masterkey;Database=C:\ścieżka\do\bazy.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8
+  ```
 
 **Struktura wyjściowa:**
 ```
@@ -131,9 +162,10 @@ DbMetaTool update-db --connection-string <conn-string> --scripts-dir <katalog-sk
 ```
 
 **Przykład:**
-```bash
-dotnet run -- update-db --connection-string "database=C:\databases\mydb\database.fdb;user=SYSDBA;password=masterkey" --scripts-dir "C:\scripts"
-```
+  **Przykład:**
+  ```bash
+  dotnet run -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\\scripts"
+  ```
 
 **Parametry:**
 - `--connection-string` - Connection string do istniejącej bazy Firebird

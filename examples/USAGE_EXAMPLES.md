@@ -14,7 +14,7 @@ This creates database `C:\temp\testdb\database.fdb` with all objects from the `e
 ### 2. Exporting Metadata
 
 ```bash
-dotnet run -- export-scripts --connection-string "database=C:\temp\testdb\database.fdb;user=SYSDBA;password=masterkey" --output-dir "C:\temp\exported"
+dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\temp\testdb\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\temp\exported"
 ```
 
 Check structure in `C:\temp\exported`:
@@ -37,14 +37,14 @@ Compare `C:\temp\testdb\database.fdb` with `C:\temp\rebuilt\database.fdb` using 
 ### Scenario A: Export from Existing Database
 
 ```bash
-dotnet run -- export-scripts --connection-string "database=C:\mydatabase.fdb;user=SYSDBA;password=masterkey" --output-dir "C:\backup-scripts"
+dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\mydatabase.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\backup-scripts"
 ```
 
 ### Scenario B: Migration Between Environments
 
 1. Export from DEV:
 ```bash
-dotnet run -- export-scripts --connection-string "database=C:\dev\app.fdb;user=SYSDBA;password=masterkey" --output-dir "C:\migration"
+dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\dev\app.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\migration"
 ```
 
 2. Build on TEST:
@@ -55,7 +55,7 @@ dotnet run -- build-db --db-dir "C:\test" --scripts-dir "C:\migration"
 ### Scenario C: Update Existing Database
 
 ```bash
-dotnet run -- update-db --connection-string "database=C:\mydatabase.fdb;user=SYSDBA;password=masterkey" --scripts-dir "C:\new-scripts"
+dotnet run -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\mydatabase.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\new-scripts"
 ```
 
 ## Common Issues
@@ -68,7 +68,7 @@ dotnet run -- update-db --connection-string "database=C:\mydatabase.fdb;user=SYS
 - Run cmd/PowerShell as Administrator
 
 ### Invalid connection string
-Correct format:
+Correct format (TCP/IP):
 ```
-database=C:\path\file.fdb;user=SYSDBA;password=masterkey;charset=UTF8
+User ID=SYSDBA;Password=masterkey;Database=C:\path\file.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8
 ```
