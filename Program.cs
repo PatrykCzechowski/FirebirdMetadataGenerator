@@ -99,6 +99,21 @@ namespace DbMetaTool
             }
             catch (Exception ex)
             {
+                // Surface inner exception details to help diagnose common issues (permissions, service not running)
+                Console.WriteLine($"Build error details: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                var msg = ex.Message ?? string.Empty;
+                if (msg.Contains("CreateFile", StringComparison.OrdinalIgnoreCase) || msg.Contains("I/O error", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Hint: Ensure the Firebird service account has write permissions to the target directory (e.g., C:\\db).");
+                }
+                if (msg.Contains("Unable to complete network request", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Hint: Start the Firebird Server service (services.msc) or use correct DataSource/Port.");
+                }
                 DependencyInjection.Cleanup();
                 throw new InvalidOperationException("Failed to build database.", ex);
             }
