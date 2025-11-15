@@ -1,0 +1,2 @@
+-- Example domain: name type
+CREATE DOMAIN D_NAME AS VARCHAR(100) NOT NULL;

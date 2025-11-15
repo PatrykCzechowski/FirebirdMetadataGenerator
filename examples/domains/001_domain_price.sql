@@ -1,0 +1,2 @@
+-- Example domain: price type
+CREATE DOMAIN D_PRICE AS NUMERIC(15, 2) DEFAULT 0.00 NOT NULL CHECK (VALUE >= 0);
