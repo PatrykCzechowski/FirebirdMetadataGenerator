@@ -29,7 +29,7 @@ public class FirebirdScriptExecutor(string connectionString, ILogger<FirebirdScr
             try
             {
                 await using var command = new FbCommand(statement, connection, transaction);
-                command.CommandTimeout = 300; // 5 minutes timeout
+                command.CommandTimeout = 300;
 
                 await command.ExecuteNonQueryAsync();
                 await transaction.CommitAsync();
@@ -161,9 +161,11 @@ public class FirebirdScriptExecutor(string connectionString, ILogger<FirebirdScr
             if (trimmedLine.EndsWith(customTerminator))
             {
                 var statement = currentStatement.ToString();
-                if (statement.EndsWith(customTerminator))
+                
+                var statementTrimmed = statement.TrimEnd();
+                if (statementTrimmed.EndsWith(customTerminator))
                 {
-                    statement = statement.Substring(0, statement.Length - customTerminator.Length).Trim();
+                    statement = statementTrimmed.Substring(0, statementTrimmed.Length - customTerminator.Length);
                 }
                 
                 if (!string.IsNullOrWhiteSpace(statement))
@@ -178,16 +180,14 @@ public class FirebirdScriptExecutor(string connectionString, ILogger<FirebirdScr
         if (currentStatement.Length > 0)
         {
             var statement = currentStatement.ToString().Trim();
+            if (statement.EndsWith(customTerminator))
+            {
+                 statement = statement.Substring(0, statement.Length - customTerminator.Length);
+            }
+
             if (!string.IsNullOrWhiteSpace(statement))
             {
-                if (statement.EndsWith(customTerminator))
-                {
-                    statement = statement.Substring(0, statement.Length - customTerminator.Length).Trim();
-                }
-                if (!string.IsNullOrWhiteSpace(statement))
-                {
-                    statements.Add(statement);
-                }
+                statements.Add(statement);
             }
         }
 

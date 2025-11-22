@@ -11,4 +11,11 @@ public interface IScriptExecutor
     /// <param name="scriptsDirectory">Directory containing .sql files.</param>
     /// <returns>Task representing the asynchronous operation.</returns>
     Task ExecuteScriptsFromDirectoryAsync(string scriptsDirectory);
+
+    /// <summary>
+    /// Executes a single SQL script.
+    /// </summary>
+    /// <param name="script">The SQL script content.</param>
+    /// <returns>Task representing the asynchronous operation.</returns>
+    Task ExecuteScriptAsync(string script);
 }
