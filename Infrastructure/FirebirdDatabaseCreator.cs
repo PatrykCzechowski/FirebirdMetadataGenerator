@@ -61,7 +61,7 @@ public class FirebirdDatabaseCreator(ILogger<FirebirdDatabaseCreator> logger) : 
     {
         return $"User={DefaultUser};Password={DefaultPassword};Database={databasePath};" +
                $"DataSource=localhost;Charset={DefaultCharset};Dialect=3;" +
-               $"Page Size={DefaultPageSize}";
+               $"Page Size={DefaultPageSize};Pooling=false";
     }
 
     private static string BuildConnectionString(string databasePath)
@@ -74,7 +74,8 @@ public class FirebirdDatabaseCreator(ILogger<FirebirdDatabaseCreator> logger) : 
             Password = DefaultPassword,
             Charset = DefaultCharset,
             ServerType = FbServerType.Default,
-            Dialect = 3
+            Dialect = 3,
+            Pooling = false
         };
 
         return builder.ToString();

@@ -20,10 +20,8 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
         var sb = new StringBuilder();
         sb.Append($"CREATE DOMAIN {domain.Name} AS {domain.DataType}");
 
-        // Firebird requires: DEFAULT before NOT NULL
         if (!string.IsNullOrWhiteSpace(domain.DefaultValue))
         {
-            // DefaultValue already contains "DEFAULT" keyword from RDB$DEFAULT_SOURCE
             var defaultValue = domain.DefaultValue.Trim();
             if (!defaultValue.StartsWith("DEFAULT", StringComparison.OrdinalIgnoreCase))
             {
@@ -42,7 +40,6 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
 
         if (!string.IsNullOrWhiteSpace(domain.CheckConstraint))
         {
-            // CheckConstraint already contains "CHECK" keyword from RDB$VALIDATION_SOURCE
             var checkConstraint = domain.CheckConstraint.Trim();
             if (!checkConstraint.StartsWith("CHECK", StringComparison.OrdinalIgnoreCase))
             {
@@ -122,14 +119,11 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
 
         var sb = new StringBuilder();
         
-        // Add SET TERM for procedure body
         sb.AppendLine("SET TERM ^ ;");
         sb.AppendLine();
         
-        // Generate full CREATE PROCEDURE with parameters
-        sb.Append($"CREATE PROCEDURE {procedure.Name}");
+        sb.Append($"CREATE OR ALTER PROCEDURE {procedure.Name}");
 
-        // Add input parameters
         if (procedure.InputParameters.Count > 0)
         {
             sb.AppendLine();
@@ -142,7 +136,6 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
             sb.Append(")");
         }
 
-        // Add output parameters
         if (procedure.OutputParameters.Count > 0)
         {
             sb.AppendLine();
@@ -160,7 +153,6 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
         sb.AppendLine("AS");
         sb.Append(procedure.Source.TrimEnd());
 
-        // Ensure it ends with terminator
         if (!procedure.Source.TrimEnd().EndsWith("^"))
         {
             sb.AppendLine();
@@ -172,5 +164,37 @@ public class SqlScriptGenerator(ILogger<SqlScriptGenerator> logger) : IScriptGen
         sb.AppendLine("SET TERM ; ^");
 
         return sb.ToString();
+    }
+
+    public string GenerateAddColumnScript(string tableName, Column column)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"ALTER TABLE {tableName} ADD {column.Name} {column.DataType}");
+        
+        if (!column.IsNullable)
+        {
+            sb.Append(" NOT NULL");
+        }
+
+        if (!string.IsNullOrWhiteSpace(column.DefaultValue))
+        {
+            var defaultValue = column.DefaultValue.Trim();
+            if (!defaultValue.StartsWith("DEFAULT", StringComparison.OrdinalIgnoreCase))
+            {
+                sb.Append($" DEFAULT {defaultValue}");
+            }
+            else
+            {
+                sb.Append($" {defaultValue}");
+            }
+        }
+        
+        sb.Append(";");
+        return sb.ToString();
+    }
+
+    public string GenerateDropColumnScript(string tableName, string columnName)
+    {
+        return $"ALTER TABLE {tableName} DROP {columnName};";
     }
 }
