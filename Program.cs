@@ -63,6 +63,11 @@ namespace DbMetaTool
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
+                    Console.WriteLine("Stack Trace: " + ex.InnerException.StackTrace);
+                }
                 return -1;
             }
         }

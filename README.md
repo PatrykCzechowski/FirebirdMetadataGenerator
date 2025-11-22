@@ -2,37 +2,13 @@
 
 Narzędzie konsolowe .NET 8.0 do zarządzania metadanymi bazy danych Firebird 5.0.
 
-## Opis i Użycie Aplikacji
-
-Jest to konsolowe narzędzie (.NET 8) do zarządzania metadanymi Firebird 5.0 (budowanie, eksport, aktualizacja).
-
-### Tworzenie bazy (Build DB)
-Tworzy plik `database.fdb` i wykonuje skrypty w kolejności: domeny → tabele → procedury.
-```powershell
-dotnet run -- build-db --db-dir "C:\db" --scripts-dir "C:\scripts"
-```
-
-### Eksport metadanych (Export Scripts)
-Zrzuca domeny, tabele i procedury do katalogów `domains/`, `tables/`, `procedures/`. Użyj kanonicznego connection string ADO.NET dla Firebird (User ID/Password/Database/DataSource/Port).
-```powershell
-dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\export"
-```
-
-### Aktualizacja bazy (Update DB)
-Wykonuje skrypty z podanego katalogu na istniejącej bazie.
-```powershell
-dotnet run -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\scripts"
-```
-
-Uwaga: Jeśli używasz embedded, zamiast `DataSource`/`Port` możesz zastosować `ServerType=1`, ale w tym projekcie zalecany jest tryb TCP/IP.
-
 ## 🎯 Funkcjonalności
 
 Aplikacja obsługuje trzy główne operacje:
 
 1. **build-db** - Budowa nowej bazy danych ze skryptów SQL
 2. **export-scripts** - Eksport metadanych z istniejącej bazy do plików SQL
-3. **update-db** - Aktualizacja istniejącej bazy na podstawie skryptów
+3. **update-db** - Aktualizacja istniejącej bazy na podstawie skryptów (synchronizacja)
 
 Aplikacja obsługuje:
 - **Domeny** (DOMAIN) - typy niestandardowe z walidacją
@@ -43,135 +19,70 @@ Aplikacja obsługuje:
 
 ## 🛠️ Wymagania
 
-- **.NET 8.0 SDK** lub nowszy - [Instrukcje instalacji](#instalacja)
-- **Firebird 5.0** zainstalowany lokalnie - [Instrukcje instalacji](#instalacja)
+- **.NET 8.0 SDK** lub nowszy - [Instrukcje instalacji](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **Firebird 5.0** zainstalowany lokalnie - [Instrukcje instalacji](https://firebirdsql.org/en/firebird-5-0/)
   - Domyślny użytkownik: `SYSDBA`
   - Domyślne hasło: `masterkey`
 
-## 📦 Instalacja
-
-### Wymagania
-
-1. **.NET 8.0 SDK** - https://dotnet.microsoft.com/download/dotnet/8.0
-2. **Firebird 5.0 Server** - https://firebirdsql.org/en/firebird-5-0/
-
-### Kompilacja
+## 📦 Instalacja i Kompilacja
 
 ```bash
-dotnet restore
-dotnet build
+dotnet restore DbMetaTool.csproj
+dotnet build DbMetaTool.csproj
 ```
 
 ## 🚀 Użycie
 
-### Uruchamianie przez dotnet run
+Aplikację można uruchamiać bezpośrednio przez `dotnet run` (wskazując plik projektu) lub używając skompilowanego pliku `.exe`.
 
-```bash
-dotnet run -- <komenda> <argumenty>
-```
+**Ważne:** Ze względu na strukturę projektu, przy używaniu `dotnet run` należy zawsze wskazywać plik projektu flagą `--project`.
 
-### Uruchamianie skompilowanego exe
-
-```bash
-DbMetaTool.exe <komenda> <argumenty>
-```
-
-## 📖 Komendy
-
-### 1. Build Database
+### 1. Build Database (Zbuduj bazę)
 
 Tworzy nową pustą bazę danych Firebird i wypełnia ją obiektami ze skryptów SQL.
+Rozwiązuje zależności cykliczne między procedurami.
 
 **Składnia:**
 ```bash
-DbMetaTool build-db --db-dir <katalog-bazy> --scripts-dir <katalog-skryptów>
+dotnet run --project DbMetaTool.csproj -- build-db --db-dir <katalog-bazy> --scripts-dir <katalog-skryptów>
 ```
 
 **Przykład:**
 ```bash
-dotnet run -- build-db --db-dir "C:\databases\mydb" --scripts-dir "C:\scripts"
+dotnet run --project DbMetaTool.csproj -- build-db --db-dir "C:\db" --scripts-dir "C:\scripts"
 ```
 
-**Parametry:**
-- `--db-dir` - Katalog, w którym zostanie utworzona baza danych (plik `database.fdb`)
-- `--scripts-dir` - Katalog zawierający pliki `.sql` ze skryptami
+### 2. Export Scripts (Wygeneruj skrypty)
 
-**Działanie:**
-1. Tworzy katalog docelowy (jeśli nie istnieje)
-2. Tworzy pustą bazę danych Firebird (`database.fdb`)
-3. Wykonuje skrypty w kolejności: domeny → tabele → procedury
-4. Raportuje postęp i błędy
-
----
-
-### 2. Export Scripts
-
-Eksportuje metadane z istniejącej bazy danych do plików SQL.
+Eksportuje metadane z istniejącej bazy danych do plików SQL w strukturze katalogów (`domains/`, `tables/`, `procedures/`).
 
 **Składnia:**
 ```bash
-DbMetaTool export-scripts --connection-string <conn-string> --output-dir <katalog-wyjściowy>
+dotnet run --project DbMetaTool.csproj -- export-scripts --connection-string <conn-string> --output-dir <katalog-wyjściowy>
 ```
 
 **Przykład:**
-  **Przykład (TCP/IP):**
-  ```bash
-  dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\\exported-scripts"
-  ```
-
-  **Alternatywnie (embedded – niezalecane w tym projekcie):**
-  ```bash
-  dotnet run -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;ServerType=1;Dialect=3;charset=UTF8" --output-dir "C:\\exported-scripts"
-  ```
-
-**Parametry:**
-- `--connection-string` - Connection string do istniejącej bazy Firebird
-- `--output-dir` - Katalog, do którego zostaną zapisane wygenerowane pliki
-
-**Format connection string:**
-  **Format connection string (TCP/IP):**
-  ```
-  User ID=SYSDBA;Password=masterkey;Database=C:\ścieżka\do\bazy.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8
-  ```
-
-**Struktura wyjściowa:**
-```
-output-dir/
-├── domains/
-│   ├── 001_domain_price.sql
-│   ├── 002_domain_name.sql
-│   └── ...
-├── tables/
-│   ├── 001_table_customers.sql
-│   ├── 002_table_orders.sql
-│   └── ...
-└── procedures/
-    ├── 001_procedure_calculate_total.sql
-    └── ...
+```bash
+dotnet run --project DbMetaTool.csproj -- export-scripts --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --output-dir "C:\export"
 ```
 
----
+### 3. Update Database (Zaktualizuj bazę)
 
-### 3. Update Database
-
-Aktualizuje istniejącą bazę danych, wykonując skrypty z katalogu.
+Synchronizuje istniejącą bazę danych ze stanem opisanym w plikach skryptów.
+- Usuwa nadmiarowe tabele i procedury
+- Dodaje brakujące tabele i domeny
+- Aktualizuje kolumny w tabelach (dodaje/usuwa)
+- Aktualizuje procedury (rozwiązując zależności cykliczne)
 
 **Składnia:**
 ```bash
-DbMetaTool update-db --connection-string <conn-string> --scripts-dir <katalog-skryptów>
+dotnet run --project DbMetaTool.csproj -- update-db --connection-string <conn-string> --scripts-dir <katalog-skryptów>
 ```
 
 **Przykład:**
-  **Przykład:**
-  ```bash
-  dotnet run -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\\databases\\mydb\\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\\scripts"
-  ```
-
-**Parametry:**
-- `--connection-string` - Connection string do istniejącej bazy Firebird
-- `--scripts-dir` - Katalog zawierający pliki `.sql` ze skryptami
-
-**Uwaga:** Obecna implementacja wykonuje wszystkie skrypty. W wersji produkcyjnej powinna porównywać metadane i generować tylko potrzebne zmiany (ALTER statements).
+```bash
+dotnet run --project DbMetaTool.csproj -- update-db --connection-string "User ID=SYSDBA;Password=masterkey;Database=C:\db\database.fdb;DataSource=localhost;Port=3050;Dialect=3;charset=UTF8" --scripts-dir "C:\scripts"
+```
 
 ## 🏗️ Architektura
 
@@ -180,119 +91,25 @@ Projekt wykorzystuje **Clean Architecture** z podziałem na warstwy:
 ```
 DbMetaTool/
 ├── Domain/                    # Warstwa domenowa (modele + interfejsy)
-│   ├── Models/               
-│   │   ├── Domain.cs         # Model domeny
-│   │   ├── Table.cs          # Model tabeli
-│   │   ├── Column.cs         # Model kolumny
-│   │   └── StoredProcedure.cs
-│   └── Interfaces/
-│       ├── IMetadataReader.cs
-│       ├── IScriptGenerator.cs
-│       ├── IScriptExecutor.cs
-│       └── IDatabaseCreator.cs
-│
 ├── Infrastructure/            # Warstwa infrastruktury (Firebird)
-│   ├── FirebirdMetadataReader.cs
-│   ├── FirebirdDatabaseCreator.cs
-│   ├── FirebirdScriptExecutor.cs
-│   └── SqlScriptGenerator.cs
-│
-├── Application/              # Warstwa aplikacji (serwisy)
-│   ├── Services/
-│   │   ├── DatabaseBuildService.cs
-│   │   ├── MetadataExportService.cs
-│   │   └── DatabaseUpdateService.cs
-│   └── Validators/
-│       └── ParameterValidator.cs
-│
-├── Common/                   # Utilities i wyjątki
-│   └── Exceptions/
-│       ├── DatabaseOperationException.cs
-│       └── ValidationException.cs
-│
-└── Program.cs                # Entry point (CLI)
+├── Application/               # Warstwa aplikacji (serwisy)
+├── Common/                    # Utilities i wyjątki
+└── Program.cs                 # Entry point (CLI)
 ```
 
-### Zasady projektowe (SOLID)
+### Kluczowe rozwiązania techniczne
 
-- **Single Responsibility** - Każda klasa ma jedną odpowiedzialność
-- **Open/Closed** - Rozszerzalność przez interfejsy
-- **Liskov Substitution** - Poprawna hierarchia dziedziczenia
-- **Interface Segregation** - Dedykowane, wąskie interfejsy
-- **Dependency Inversion** - Zależności skierowane na abstrakcje
-
-## 🧪 Testowanie
-
-Uruchom skrypt testowy:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\TEST.ps1
-```
-
-Skrypt automatycznie weryfikuje poprawność działania aplikacji.
-
-## 📝 Znane ograniczenia
-
-### Obecna wersja
-
-- **Constraints** (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK na tabelach) - nie są obsługiwane
-- **Indeksy** - nie są obsługiwane
-- **Triggery** - nie są obsługiwane
-- **Generators/Sequences** - nie są obsługiwane
-- **Views** - nie są obsługiwane
-- **Update Database** - wykonuje wszystkie skrypty zamiast tylko różnice
-
-### Poprawka dla UTF8
-
-**Problem rozwiązany:** Firebird przechowuje długości VARCHAR w **bajtach**, nie znakach.
-
-**Rozwiązanie zaimplementowane:**
-```csharp
-// UTF8 używa 4 bajtów na znak
-var bytesPerChar = charSetId == 4 ? 4 : 1;
-var charLength = fieldLength / bytesPerChar;
-```
-
-**Efekt:** `VARCHAR(100)` jest eksportowany prawidłowo (nie jako `VARCHAR(400)`).
-
-### Potencjalne rozszerzenia
-
-- Wsparcie dla constraints i indeksów
-- Inteligentne porównywanie metadanych w `update-db`
-- Generowanie ALTER statements zamiast pełnego odtworzenia
-- Wsparcie dla transakcji długotrwałych
-- Backup/restore przed update-db
-- Szczegółowe logowanie do pliku
-- Obsługa wielu dialektów SQL
+- **Dependency Injection** - Zarządzanie zależnościami
+- **Serilog** - Strukturalne logowanie operacji
+- **Obsługa UTF8** - Poprawne przeliczanie długości pól tekstowych (bajty vs znaki)
+- **Circular Dependency Handling** - Dwufazowe wgrywanie procedur (Stub Pass -> Full Pass)
+- **Inteligentna synchronizacja** - Porównywanie metadanych zamiast ślepego wgrywania skryptów
 
 ## 🔧 Zależności
 
 - **FirebirdSql.Data.FirebirdClient** (10.3.1) - ADO.NET provider dla Firebird
 - **Microsoft.Extensions.DependencyInjection** (8.0.1) - Kontener DI
 - **Serilog** (4.1.0) - Strukturalne logowanie
-
-## 🆘 Rozwiązywanie problemów
-
-### "Database file already exists"
-- Usuń istniejący plik `.fdb` z katalogu docelowego
-
-### "Connection string must contain database path"
-- Upewnij się, że connection string zawiera parametr `database=...`
-
-### "Directory does not exist"
-- Sprawdź poprawność ścieżek, użyj pełnych ścieżek bezwzględnych
-
-### "Failed to execute script"
-- Sprawdź składnię SQL w plikach skryptów
-- Upewnij się, że Firebird Server jest uruchomiony
-- Sprawdź uprawnienia użytkownika SYSDBA
-
-### "Unable to load DLL 'fbembed'"
-- Użyj `DataSource=localhost;Port=3050` zamiast `ServerType=1`
-
-## 📄 Licencja
-
-Projekt utworzony jako zadanie rekrutacyjne.
 
 ## 👨‍💻 Autor
 
